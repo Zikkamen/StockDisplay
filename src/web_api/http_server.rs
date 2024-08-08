@@ -2,6 +2,7 @@ use std::{
     collections::{HashMap},
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
+    error,
 };
 
 use crate::web_api::api_register::ApiRegister;
@@ -22,13 +23,19 @@ impl HttpServer {
     pub fn start_listening(&self) {
         for stream in self.listener.incoming() {
             match stream {
-                Ok(v) => self.handle_connection(v),
+                Ok(mut v) => match self.handle_connection(&mut v) {
+                    Ok(hm) => {
+                        println!("Handling Connection");
+                        self.api_register.handle_http_request(hm, v);
+                    },
+                    Err(e) => println!("Error handling incoming request {}", e),
+                },
                 Err(e) => println!("Error handling incoming request {}", e),
             };
         }
     }
 
-    fn handle_connection(&self, mut stream: TcpStream) {
+    fn handle_connection(&self, mut stream: &mut TcpStream) -> Result<HashMap<String, String>,  Box<dyn error::Error + 'static>> {
         let buf_reader = BufReader::new(&mut stream);
         let http_request: HashMap<String, String> = buf_reader
             .lines()
@@ -37,11 +44,9 @@ impl HttpServer {
             .map(|line| split_string_into_pairs(&line))
             .collect::<HashMap<String, String>>();
         
-        println!("Handling Connection");
-        self.api_register.handle_http_request(http_request, stream);
+        Ok(http_request)
     }
 }
-
 
 fn split_string_into_pairs(s: &String) -> (String, String) {
     let n: usize = s.len();
