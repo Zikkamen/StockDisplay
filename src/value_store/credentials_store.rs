@@ -9,10 +9,10 @@ pub struct CredentialsStore {
 }
 
 impl CredentialsStore {
-    pub fn new(file_path: String) -> Self {
+    pub fn new() -> Self {
         let mut credentials_store = CredentialsStore{ credentials_map:HashMap::new() };
 
-        let credentials_reader:CredentialsReader = CredentialsReader::new(file_path);
+        let credentials_reader:CredentialsReader = CredentialsReader::new("credentials/database_credentials.xml".to_string());
         credentials_store.insert_values_into_map(&credentials_reader.get_credentials());
 
         credentials_store
