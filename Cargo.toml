@@ -4,6 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-websocket = "0.24.0"
 minijinja = "2.1.1"
-postgres = "0.19.8"
