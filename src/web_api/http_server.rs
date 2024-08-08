@@ -39,7 +39,7 @@ impl HttpServer {
         let buf_reader = BufReader::new(&mut stream);
         let http_request: HashMap<String, String> = buf_reader
             .lines()
-            .map(|result| result.unwrap())
+            .map(|result| match result { Ok(v) => v, Err(_e) => String::new()})
             .take_while(|line| !line.is_empty())
             .map(|line| split_string_into_pairs(&line))
             .collect::<HashMap<String, String>>();
