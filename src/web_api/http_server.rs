@@ -13,10 +13,10 @@ pub struct HttpServer {
 }
 
 impl HttpServer {
-    pub fn new(address: &str) -> Self {
+    pub fn new(address: &str, main_api_register: ApiRegister) -> Self {
         HttpServer{ 
             listener: TcpListener::bind(address).unwrap() ,
-            api_register: ApiRegister::new(),
+            api_register: main_api_register,
         }
     }
 
