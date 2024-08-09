@@ -51,6 +51,8 @@ impl HttpServer {
 fn split_string_into_pairs(s: &String) -> (String, String) {
     let n: usize = s.len();
 
+    if n == 0 { return (String::new(), String::new()); }
+
     let sep_pos = match s.find(':') {
         Some(v) => v,
         None => return ("HEAD_REQUEST:".to_string(), s.clone()), 
