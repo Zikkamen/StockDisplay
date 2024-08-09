@@ -15,6 +15,7 @@
             <th scope="col">Average Price</th>
             <th scope="col">Min Price</th>
             <th scope="col">Max Price</th>
+            <th scope="col">Volume Moved</th>
             <th scope="col">Number of Trades</th>
             <th scope="col">Time of Last Trade</th>
           </tr>
@@ -23,11 +24,12 @@
         {% for stock in stock_list %}
           <tr id={{ stock }} style="display:none">
             <th scope="row">StockName</th>
-            <td>1</td>
-            <td>1</td>
-            <td>1</td>
-            <td>1</td>
-            <td>1</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
           </tr>
         {% endfor %}
         </tbody>
@@ -66,8 +68,9 @@
     elem.children[1].innerHTML = parsed_data.avg_price;
     elem.children[2].innerHTML = parsed_data.min_price;
     elem.children[3].innerHTML = parsed_data.max_price;
-    elem.children[4].innerHTML = parsed_data.num_of_trades;
-    elem.children[5].innerHTML = new Date(parsed_data.time).toISOString();
+    elem.children[4].innerHTML = parsed_data.volume_moved;
+    elem.children[5].innerHTML = parsed_data.num_of_trades;
+    elem.children[6].innerHTML = new Date(parsed_data.time).toISOString();
 
     console.log(parsed_data);
   });
