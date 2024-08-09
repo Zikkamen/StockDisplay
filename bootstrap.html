@@ -52,19 +52,20 @@
   // Listen for messages
   socket.addEventListener("message", (event) => {
     let parsed_data = JSON.parse(event.data);
+    let uppercase_name = parsed_data.name.toUpperCase();
 
-    if(!stockrow_map.has(parsed_data.name)) {
-      stockrow_map.set(parsed_data.name, cur_id);
+    if(!stockrow_map.has(uppercase_name)) {
+      stockrow_map.set(uppercase_name, cur_id);
       cur_id += 1;
     }
 
-    let el_id = stockrow_map.get(parsed_data.name);
+    let el_id = stockrow_map.get(uppercase_name);
     let stock_id = "Stock" + el_id;
     
     const elem = document.getElementById(stock_id);
     elem.style.display = "";
 
-    elem.children[0].innerHTML = parsed_data.name;
+    elem.children[0].innerHTML = uppercase_name;
     elem.children[1].innerHTML = parsed_data.avg_price;
     elem.children[2].innerHTML = parsed_data.min_price;
     elem.children[3].innerHTML = parsed_data.max_price;

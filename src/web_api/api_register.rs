@@ -20,8 +20,8 @@ impl ApiRegister {
 
     pub fn handle_http_request(&self, http_request: HashMap<String, String>, stream: TcpStream) {
         match get_method_and_path(&http_request) {
-            Ok((method, path)) => self.handle_request_with_meta_data(method, path, http_request, stream),
-            Err(_e) => (),
+            Some((method, path)) => self.handle_request_with_meta_data(method, path, http_request, stream),
+            None => (),
         };
     }
 
@@ -69,11 +69,15 @@ impl ApiRegister {
     }
 }
 
-pub fn get_method_and_path(http_request: &HashMap<String, String>) -> Result<(String, String), Box<dyn error::Error + 'static>> {
-    let header = http_request.get("HEAD_REQUEST:").expect("A Header is expected");
+pub fn get_method_and_path(http_request: &HashMap<String, String>) -> Option<(String, String)> {
+    let header = match http_request.get("HEAD_REQUEST:") {
+        Some(v) => v,
+        None => return None,
+    };
+
     let split_header:Vec<&str> = header.split(' ').collect();
 
-    if split_header.len() < 2 { panic!("Header is malformed"); }
+    if split_header.len() < 2 { return None; }
 
-    Ok((split_header[0].to_string(), split_header[1].to_string()))
+    Some((split_header[0].to_string(), split_header[1].to_string()))
 }
