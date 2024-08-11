@@ -2,50 +2,58 @@ use std::{
     collections::{HashMap},
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
+    thread,
     error,
+    sync::{Arc, RwLock},
 };
 
 use crate::web_api::api_register::ApiRegister;
 
 pub struct HttpServer {
-    listener: TcpListener,
-    api_register: ApiRegister,
+    address: String,
+    api_register: Arc<RwLock<ApiRegister>>,
 }
 
 impl HttpServer {
     pub fn new(address: &str, main_api_register: ApiRegister) -> Self {
         HttpServer{ 
-            listener: TcpListener::bind(address).unwrap() ,
-            api_register: main_api_register,
+            address: address.to_string(),
+            api_register: Arc::new(RwLock::new(main_api_register)),
         }
     }
 
     pub fn start_listening(&self) {
-        for stream in self.listener.incoming() {
-            match stream {
-                Ok(mut v) => match self.handle_connection(&mut v) {
-                    Ok(hm) => {
-                        println!("Handling Connection");
-                        self.api_register.handle_http_request(hm, v);
+        let listener = TcpListener::bind(&self.address).unwrap();
+
+        for stream in listener.incoming() {
+            let api_register_clone = Arc::clone(&self.api_register);
+
+            thread::spawn(move || {
+                match stream {
+                    Ok(mut v) => match handle_connection(&mut v) {
+                        Ok(hm) => {
+                            println!("Handling Connection");
+                            api_register_clone.read().unwrap().handle_http_request(hm, v);
+                        },
+                        Err(e) => println!("Error handling incoming request {}", e),
                     },
                     Err(e) => println!("Error handling incoming request {}", e),
-                },
-                Err(e) => println!("Error handling incoming request {}", e),
-            };
+                };
+            });
         }
     }
+}
 
-    fn handle_connection(&self, mut stream: &mut TcpStream) -> Result<HashMap<String, String>,  Box<dyn error::Error + 'static>> {
-        let buf_reader = BufReader::new(&mut stream);
-        let http_request: HashMap<String, String> = buf_reader
-            .lines()
-            .map(|result| match result { Ok(v) => v, Err(_e) => String::new()})
-            .take_while(|line| !line.is_empty())
-            .map(|line| split_string_into_pairs(&line))
-            .collect::<HashMap<String, String>>();
-        
-        Ok(http_request)
-    }
+fn handle_connection(mut stream: &mut TcpStream) -> Result<HashMap<String, String>,  Box<dyn error::Error + 'static>> {
+    let buf_reader = BufReader::new(&mut stream);
+    let http_request: HashMap<String, String> = buf_reader
+        .lines()
+        .map(|result| match result { Ok(v) => v, Err(_e) => String::new()})
+        .take_while(|line| !line.is_empty())
+        .map(|line| split_string_into_pairs(&line))
+        .collect::<HashMap<String, String>>();
+    
+    Ok(http_request)
 }
 
 fn split_string_into_pairs(s: &String) -> (String, String) {
