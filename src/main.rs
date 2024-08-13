@@ -32,7 +32,7 @@ fn index(_http_request: HashMap<String, String>, stream: TcpStream) {
 
     let mut stock_list:Vec<String> = Vec::new();
     
-    for i in 0..50 { stock_list.push(format!("Stock{}", i)); }
+    for i in 0..150 { stock_list.push(format!("Stock{}", i)); }
 
     let tmpl = env.get_template("home").expect("Valid template");
     let contents = tmpl.render(context!(stock_list => stock_list)).expect("Valid rendering template");
