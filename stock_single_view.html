@@ -9,49 +9,49 @@
   <body>
     <h1>StockDisplay</h1>
 
-    <div style="width: 800px;"><canvas id="myChart"></canvas></div>
+    <div style="width: 800px;"><canvas id="chart"></canvas></div>
   </body>
 </html>
 
-
 <script src="http://45.83.104.11:7878/files/static/js/chart.js"></script>
+<script src="http://45.83.104.11:7878/files/static/js/chartjs-chart-financial.js"></script>
 <script>
-   var barCount = 60;
-var initialDateStr = new Date().toUTCString();
+  var barCount = 60;
+  var initialDateStr = new Date().toUTCString();
 
-var ctx = document.getElementById('chart').getContext('2d');
-ctx.canvas.width = 1000;
-ctx.canvas.height = 250;
+  var ctx = document.getElementById('chart').getContext('2d');
+  ctx.canvas.width = 1000;
+  ctx.canvas.height = 250;
 
-var barData = new Array(barCount);
-var lineData = new Array(barCount);
+  var barData = new Array(barCount);
+  var lineData = new Array(barCount);
 
-getRandomData(initialDateStr);
+  getRandomData(initialDateStr);
 
-var chart = new Chart(ctx, {
-  type: 'candlestick',
-  data: {
-    datasets: [{
-      label: 'CHRT - Chart.js Corporation',
-      data: barData,
-    }, {
-      label: 'Close price',
-      type: 'line',
-      data: lineData,
-      hidden: true,
-    }]
+  var chart = new Chart(ctx, {
+    type: 'candlestick',
+    data: {
+      datasets: [{
+        label: 'CHRT - Chart.js Corporation',
+        data: barData,
+      }, {
+        label: 'Close price',
+        type: 'line',
+        data: lineData,
+        hidden: true,
+      }]
+    }
+  });
+
+  function randomNumber(min, max) {
+    return Math.random() * (max - min) + min;
   }
-});
 
-function randomNumber(min, max) {
-  return Math.random() * (max - min) + min;
-}
-
-function randomBar(target, index, date, lastClose) {
-  var open = +randomNumber(lastClose * 0.95, lastClose * 1.05).toFixed(2);
-  var close = +randomNumber(open * 0.95, open * 1.05).toFixed(2);
-  var high = +randomNumber(Math.max(open, close), Math.max(open, close) * 1.1).toFixed(2);
-  var low = +randomNumber(Math.min(open, close) * 0.9, Math.min(open, close)).toFixed(2);
+  function randomBar(target, index, date, lastClose) {
+    var open = +randomNumber(lastClose * 0.95, lastClose * 1.05).toFixed(2);
+    var close = +randomNumber(open * 0.95, open * 1.05).toFixed(2);
+    var high = +randomNumber(Math.max(open, close), Math.max(open, close) * 1.1).toFixed(2);
+    var low = +randomNumber(Math.min(open, close) * 0.9, Math.min(open, close)).toFixed(2);
 
   if (!target[index]) {
     target[index] = {};
