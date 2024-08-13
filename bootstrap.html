@@ -12,14 +12,15 @@
         <thead>
           <tr>
             <th scope="col">Stock</th>
-            <th scope="col">Last Price</th>
-            <th scope="col">Average Price</th>
+            <th scope="col">Last Price (Volume)</th>
+            <th scope="col">Last Price (Trade)</th>
+            <th scope="col">Average Price (Volume)</th>
+            <th scope="col">Average Price (Trade)</th>
             <th scope="col">Min Price</th>
             <th scope="col">Max Price</th>
             <th scope="col">Volume Moved</th>
-            <th scope="col">Number of Trades</th>
-            <th scope="col">#Volume &lt; Last Price</th>
-            <th scope="col">#Volume &gt; Last Price</th>
+            <th scope="col">#Trades</th>
+            <th scope="col">Direction</th>
             <th scope="col">Time of Last Trade</th>
           </tr>
         </thead>
@@ -27,15 +28,16 @@
         {% for stock in stock_list %}
           <tr id={{ stock }} style="display:none">
             <th scope="row">StockName</th>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
-            <td>0</td>
+            <td>undefined</td>
+            <td>undefined</td>
+            <td>undefined</td>
+            <td>undefined</td>
+            <td>undefined</td>
+            <td>undefined</td>
+            <td>undefined</td>
+            <td>undefined</td>
+            <td>undefined</td>
+            <td>undefined</td>
           </tr>
         {% endfor %}
         </tbody>
@@ -73,15 +75,16 @@
     elem.style.display = "";
 
     elem.children[0].innerHTML = uppercase_name;
-    elem.children[1].innerHTML = parsed_data.last_price;
-    elem.children[2].innerHTML = parsed_data.avg_price;
-    elem.children[3].innerHTML = parsed_data.min_price;
-    elem.children[4].innerHTML = parsed_data.max_price;
-    elem.children[5].innerHTML = parsed_data.volume_moved;
-    elem.children[6].innerHTML = parsed_data.num_of_trades;
-    elem.children[7].innerHTML = parsed_data.min_pos;
-    elem.children[8].innerHTML = parsed_data.max_pos;
-    elem.children[9].innerHTML = new Date(parsed_data.time).toISOString();
+    elem.children[1].innerHTML = parsed_data.last_price_volume;
+    elem.children[2].innerHTML = parsed_data.last_price_trade;
+    elem.children[3].innerHTML = parsed_data.avg_price_volume;
+    elem.children[4].innerHTML = parsed_data.avg_price_trade;
+    elem.children[5].innerHTML = parsed_data.min_price;
+    elem.children[6].innerHTML = parsed_data.max_price;
+    elem.children[7].innerHTML = parsed_data.volume_moved;
+    elem.children[8].innerHTML = parsed_data.num_of_trades;
+    elem.children[9].innerHTML = parsed_data.direction;
+    elem.children[10].innerHTML = new Date(parsed_data.timestamp).toISOString();
 
     console.log(parsed_data);
   });
