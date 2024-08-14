@@ -20,6 +20,9 @@ fn main() {
     let files_api = ApiRegister::new(return_file);
     main_api.register_prefix("files", files_api);
 
+    let stocks_api = ApiRegister::new(index_stock);
+    main_api.register_prefix("stocks", stocks_api);
+
     let http_server = HttpServer::new("127.0.0.1:7878", main_api);
     http_server.start_listening();
 }
@@ -36,6 +39,24 @@ fn index(_http_request: HashMap<String, String>, stream: TcpStream) {
 
     let tmpl = env.get_template("home").expect("Valid template");
     let contents = tmpl.render(context!(stock_list => stock_list)).expect("Valid rendering template");
+
+    write_respone_successful(stream, contents);
+}
+
+fn index_stock(http_request: HashMap<String, String>, stream: TcpStream) {
+    let html_file_content = fs::read_to_string("stock_single_view.html").expect("Valid file");
+    let mut env = Environment::new();
+
+    env.add_template("stock", &html_file_content);
+
+    let (method, path) = get_method_and_path(&http_request).expect("Method and Path got checked already");
+    let stock_name:String = match path.split('/').next_back() {
+        Some(v) => v.to_uppercase(),
+        None => return,
+    };
+
+    let tmpl = env.get_template("stock").expect("Valid template");
+    let contents = tmpl.render(context!(stock_name => stock_name)).expect("Valid rendering template");
 
     write_respone_successful(stream, contents);
 }

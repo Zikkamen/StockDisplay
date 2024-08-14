@@ -12,10 +12,9 @@
         <thead style="position: sticky;top: 0; background-color: white;">
           <tr>
             <th scope="col">Stock</th>
+            <th scope="col">Price</th>
+            <th scope="col">Price (Open)</th>
             <th scope="col">Min Price</th>
-            <th scope="col">0.25 Percentile</th>
-            <th scope="col">Median Price</th>
-            <th scope="col">0.75 Percentile</th>
             <th scope="col">Max Price</th>
             <th scope="col">Volume Moved</th>
             <th scope="col">#Trades</th>
@@ -26,7 +25,6 @@
         {% for stock in stock_list %}
           <tr id={{ stock }} style="display:none">
             <th scope="row">StockName</th>
-            <td>undefined</td>
             <td>undefined</td>
             <td>undefined</td>
             <td>undefined</td>
@@ -50,17 +48,19 @@
 
   // Connection opened
   socket.addEventListener("open", (event) => {
-    socket.send("Hello Server!");
+    socket.send('{"interval": 1}');
   });
 
   // Listen for messages
   socket.addEventListener("message", (event) => {
-    console.log(event.data);
     let parsed_data = JSON.parse(event.data);
+    console.log(parsed_data);
+
     let uppercase_name = parsed_data.name.toUpperCase();
 
     if(!stockrow_map.has(uppercase_name)) {
       stockrow_map.set(uppercase_name, cur_id);
+      document.getElementById("Stock" + cur_id).setAttribute("onclick", "window.location='/stocks/" + uppercase_name + "'");
       cur_id += 1;
     }
 
@@ -71,15 +71,15 @@
     elem.style.display = "";
 
     elem.children[0].innerHTML = uppercase_name;
-    elem.children[1].innerHTML = parsed_data.min_price;
-    elem.children[2].innerHTML = parsed_data.bottom_25p;
-    elem.children[3].innerHTML = parsed_data.median_price;
-    elem.children[4].innerHTML = parsed_data.top_25p;
-    elem.children[5].innerHTML = parsed_data.max_price;
-    elem.children[6].innerHTML = parsed_data.volume_moved;
-    elem.children[7].innerHTML = parsed_data.num_of_trades;
-    elem.children[8].innerHTML = new Date(parsed_data.timestamp).toISOString();
+    elem.children[1].innerHTML = parsed_data.avg_price;
+    elem.children[2].innerHTML = parsed_data.avg_price_open;
+    elem.children[3].innerHTML = parsed_data.min_price;
+    elem.children[4].innerHTML = parsed_data.max_price;
+    elem.children[5].innerHTML = parsed_data.volume_moved;
+    elem.children[6].innerHTML = parsed_data.num_of_trades;
 
-    console.log(parsed_data);
+    if(parsed_data.timestamp > 0) {
+      elem.children[7].innerHTML = new Date(parsed_data.timestamp).toISOString();
+    }
   });
 </script>

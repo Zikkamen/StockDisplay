@@ -5,130 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Stock Display</title>
     <link href="http://45.83.104.11:7878/files/static/css/bootstrap.min.css" rel="stylesheet">
+    <script src="http://45.83.104.11:7878/files/static/js/chart.js"></script>
+    <script src="http://45.83.104.11:7878/files/static/js/luxon.js"></script>
+    <script src="http://45.83.104.11:7878/files/static/js/chartjs-chart-financial.js"></script>
+    <script src="http://45.83.104.11:7878/files/static/js/chartjs-adapter-luxon.js"></script>
   </head>
   <body>
     <h1>StockDisplay</h1>
 
-    <div style="width: 800px;"><canvas id="chart"></canvas></div>
+    <h1 style="max-width: fit-content; margin-left: auto; margin-right: auto;">{{ stock_name }}</h1>
+    <div style="min-width: 1200px; margin-left: 100px; margin-right: 100px; margin-top: 100px;">
+      <h2>Realtime chart</h2>
+      <canvas id="chart"></canvas>
+    </div>
   </body>
 </html>
-
-<script src="http://45.83.104.11:7878/files/static/js/chart.js"></script>
-<script src="http://45.83.104.11:7878/files/static/js/chartjs-chart-financial.js"></script>
-<script src="http://45.83.104.11:7878/files/static/js/chartjs-adapter-luxon.js"></script>
 <script>
   var barCount = 60;
   var initialDateStr = new Date().toUTCString();
 
   var ctx = document.getElementById('chart').getContext('2d');
-  ctx.canvas.width = 1000;
-  ctx.canvas.height = 250;
+  ctx.canvas.width = 800;
+  ctx.canvas.height = 200;
 
-  var barData = new Array(barCount);
-  var lineData = new Array(barCount);
+  var barData = [];
+  var lineData = [];
 
-  getRandomData(initialDateStr);
+  barData.push(
+      {
+      x: 0,
+      o: 0,
+      h: 0,
+      l: 0,
+      c: 0
+    }
+  );
+
+  lineData.push({x: 0, y: 0});
 
   var chart = new Chart(ctx, {
     type: 'candlestick',
     data: {
       datasets: [{
-        label: 'CHRT - Chart.js Corporation',
+        label: 'Candlestick Graph',
         data: barData,
+        yAxisID: 'left-y-axis'
       }, {
         label: 'Close price',
-        type: 'line',
+        type: 'scatter',
         data: lineData,
-        hidden: true,
+        borderColor: 'blue',
+        yAxisID: 'right-y-axis'
       }]
+    },
+    options: {
+        scales: {
+            'left-y-axis': {
+                type: 'linear',
+                position: 'left'
+            },
+            'right-y-axis': {
+                type: 'linear',
+                position: 'right'
+            }
+        }
     }
   });
 
-  function randomNumber(min, max) {
-    return Math.random() * (max - min) + min;
-  }
+  const socket = new WebSocket("ws://localhost:9002");
 
-  function randomBar(target, index, date, lastClose) {
-    var open = +randomNumber(lastClose * 0.95, lastClose * 1.05).toFixed(2);
-    var close = +randomNumber(open * 0.95, open * 1.05).toFixed(2);
-    var high = +randomNumber(Math.max(open, close), Math.max(open, close) * 1.1).toFixed(2);
-    var low = +randomNumber(Math.min(open, close) * 0.9, Math.min(open, close)).toFixed(2);
+  socket.addEventListener("open", (event) => {
+    socket.send('{"stock": "{{ stock_name }}"}');
+  });
 
-  if (!target[index]) {
-    target[index] = {};
-  }
+  // Listen for messages
+  socket.addEventListener("message", (event) => {
+    let parsed_data = JSON.parse(event.data);
 
-    Object.assign(target[index], {
-      x: date.valueOf(),
-      o: open,
-      h: high,
-      l: low,
-      c: close
-    });
+    if(parsed_data.stock_interval != 1) {
+      return;
+    }
 
-  }
-
-  function getRandomData(dateStr) {
-    var date = luxon.DateTime.fromRFC2822(dateStr);
-
-    for (let i = 0; i < barData.length;) {
-      date = date.plus({days: 1});
-      if (date.weekday <= 5) {
-        randomBar(barData, i, date, i === 0 ? 30 : barData[i - 1].c);
-        lineData[i] = {x: barData[i].x, y: barData[i].c};
-        i++;
+    barData.push(
+        {
+        x: parsed_data.timestamp,
+        o: parsed_data.avg_price_open,
+        h: parsed_data.max_price,
+        l: parsed_data.min_price,
+        c: parsed_data.avg_price
       }
+    );
+
+    lineData.push({x: parsed_data.timestamp, y: parsed_data.volume_moved});
+
+    if(barData.length >= 61) {
+      barData.shift();
+      lineData.shift();
+      chart.update();
     }
-  }
-
-  var update = function() {
-    var dataset = chart.config.data.datasets[0];
-
-    // candlestick vs ohlc
-    var type = document.getElementById('type').value;
-    chart.config.type = type;
-
-    // linear vs log
-    var scaleType = document.getElementById('scale-type').value;
-    chart.config.options.scales.y.type = scaleType;
-
-    // color
-    var colorScheme = document.getElementById('color-scheme').value;
-    if (colorScheme === 'neon') {
-      chart.config.data.datasets[0].backgroundColors = {
-        up: '#01ff01',
-        down: '#fe0000',
-        unchanged: '#999',
-      };
-    } else {
-      delete chart.config.data.datasets[0].backgroundColors;
-    }
-
-    // border
-    var border = document.getElementById('border').value;
-    if (border === 'false') {
-      dataset.borderColors = 'rgba(0, 0, 0, 0)';
-    } else {
-      delete dataset.borderColors;
-    }
-
-    // mixed charts
-    var mixed = document.getElementById('mixed').value;
-    if (mixed === 'true') {
-      chart.config.data.datasets[1].hidden = false;
-    } else {
-      chart.config.data.datasets[1].hidden = true;
-    }
-
-    chart.update();
-  };
-
-  [...document.getElementsByTagName('select')].forEach(element => element.addEventListener('change', update));
-
-  document.getElementById('update').addEventListener('click', update);
-
-  document.getElementById('randomizeData').addEventListener('click', function() {
-    getRandomData(initialDateStr, barData);
-    update();
   });
 </script>
