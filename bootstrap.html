@@ -48,7 +48,7 @@
 
   // Connection opened
   socket.addEventListener("open", (event) => {
-    socket.send('{"interval": 1}');
+    socket.send('{"stock": "*", "interval": 1}');
   });
 
   // Listen for messages

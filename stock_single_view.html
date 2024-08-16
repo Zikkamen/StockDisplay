@@ -75,15 +75,21 @@
   const socket = new WebSocket("ws://localhost:9002");
 
   socket.addEventListener("open", (event) => {
-    socket.send('{"stock": "{{ stock_name }}"}');
+    socket.send('{"stock": "{{ stock_name }}", "interval":1}');
   });
 
   // Listen for messages
   socket.addEventListener("message", (event) => {
     let parsed_data = JSON.parse(event.data);
+    console.log(parsed_data);
 
     if(parsed_data.stock_interval != 1) {
       return;
+    }
+
+    if(lineData[0].x == 0) {
+      barData.shift();
+      lineData.shift();
     }
 
     barData.push(
@@ -98,10 +104,11 @@
 
     lineData.push({x: parsed_data.timestamp, y: parsed_data.volume_moved});
 
-    if(barData.length >= 61) {
+    if(barData.length >= 120) {
       barData.shift();
       lineData.shift();
-      chart.update();
     }
+
+    chart.update();
   });
 </script>
