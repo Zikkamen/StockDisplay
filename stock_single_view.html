@@ -61,6 +61,15 @@
   // Listen for messages
   socket.addEventListener("message", (event) => {
     let parsed_data = JSON.parse(event.data);
+
+    if(parsed_data.avg_price - parsed_data.min_price > 2) {
+      parsed_data.min_price = parsed_data.avg_price - 2;
+    }
+
+    if(parsed_data.max_price - parsed_data.avg_price > 2) {
+      parsed_data.max_price = parsed_data.avg_price + 2;
+    }
+    
     console.log(parsed_data);
 
     if(lineData[0].x == 0) {
