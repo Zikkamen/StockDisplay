@@ -63,11 +63,11 @@
     let parsed_data = JSON.parse(event.data);
 
     if(parsed_data.avg_price - parsed_data.min_price > 1) {
-      parsed_data.min_price = parsed_data.avg_price - 1;
+      parsed_data.min_price = parsed_data.avg_price;
     }
 
     if(parsed_data.max_price - parsed_data.avg_price > 1) {
-      parsed_data.max_price = parsed_data.avg_price + 1;
+      parsed_data.max_price = parsed_data.avg_price;
     }
 
     console.log(parsed_data);
