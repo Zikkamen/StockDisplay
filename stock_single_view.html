@@ -14,9 +14,28 @@
     <h1>StockDisplay</h1>
 
     <h1 style="max-width: fit-content; margin-left: auto; margin-right: auto;">{{ stock_name }}</h1>
-    <div style="min-width: 1200px; margin-left: 100px; margin-right: 100px; margin-top: 100px;">
-      <h2>Realtime chart</h2>
-      <canvas id="chart"></canvas>
+    <div style="min-width: 1400px">
+      <div style="min-width: 1200px; margin-left: 100px; margin-right: 100px; margin-top: 100px;">
+        <h2>Realtime chart</h2>
+        <div class="btn-group btn-group-toggle" data-toggle="buttons" style="float: right; margin-bottom: 20px;">
+          <label class="btn btn-secondary active">
+            <input type="radio" name="options" id="one_sec" autocomplete="off" onClick="time_interval_change(this.id)"> 1 Second
+          </label>
+          <label class="btn btn-secondary">
+            <input type="radio" name="options" id="ten_sec" autocomplete="off" onClick="time_interval_change(this.id)"> 10 Seconds
+          </label>
+          <label class="btn btn-secondary">
+            <input type="radio" name="options" id="one_min" autocomplete="off" onClick="time_interval_change(this.id)"> 1 Minute
+          </label>
+          <label class="btn btn-secondary">
+            <input type="radio" name="options" id="five_min" autocomplete="off" onClick="time_interval_change(this.id)"> 5 Minutes
+          </label>
+          <label class="btn btn-secondary">
+            <input type="radio" name="options" id="ten_min" autocomplete="off" onClick="time_interval_change(this.id)"> 10 Minutes
+          </label>
+        </div>
+        <canvas id="chart"></canvas>
+      </div>
     </div>
   </body>
 </html>
@@ -31,46 +50,7 @@
   var barData = [];
   var lineData = [];
 
-  barData.push(
-      {
-      x: 0,
-      o: 0,
-      h: 0,
-      l: 0,
-      c: 0
-    }
-  );
-
-  lineData.push({x: 0, y: 0});
-
-  var chart = new Chart(ctx, {
-    type: 'candlestick',
-    data: {
-      datasets: [{
-        label: 'Price',
-        data: barData,
-        yAxisID: 'left-y-axis'
-      }, {
-        label: 'Volume',
-        type: 'scatter',
-        data: lineData,
-        borderColor: 'blue',
-        yAxisID: 'right-y-axis'
-      }]
-    },
-    options: {
-        scales: {
-            'left-y-axis': {
-                type: 'linear',
-                position: 'left'
-            },
-            'right-y-axis': {
-                type: 'linear',
-                position: 'right'
-            }
-        }
-    }
-  });
+  var chart = new candlestick_graph();
 
   const socket = new WebSocket("ws://localhost:9002");
 
@@ -82,10 +62,6 @@
   socket.addEventListener("message", (event) => {
     let parsed_data = JSON.parse(event.data);
     console.log(parsed_data);
-
-    if(parsed_data.stock_interval != 1) {
-      return;
-    }
 
     if(lineData[0].x == 0) {
       barData.shift();
@@ -108,7 +84,94 @@
       barData.shift();
       lineData.shift();
     }
-
+    
     chart.update();
   });
+
+  let current_active = "one_sec";
+
+  function time_interval_change(button_id){
+    document.getElementById(current_active).parentNode.className = "btn btn-secondary";
+    document.getElementById(button_id).parentNode.className = "btn btn-secondary active";
+    current_active = button_id;
+
+    while(barData.length > 0) {
+      barData.pop();
+    }
+
+    while(lineData.length > 0) {
+      lineData.pop();
+    }
+
+    chart.destroy();
+    chart = new candlestick_graph();
+
+    switch(current_active) {
+      case "one_sec":
+        socket.send('{"stock": "{{ stock_name }}", "interval":1}');
+        break;
+      case "ten_sec":
+        socket.send('{"stock": "{{ stock_name }}", "interval":10}');
+        break;
+      case "one_min":
+        socket.send('{"stock": "{{ stock_name }}", "interval":60}');
+        break;
+      case "five_min":
+        socket.send('{"stock": "{{ stock_name }}", "interval":300}');
+        break;
+      case "ten_min":
+        socket.send('{"stock": "{{ stock_name }}", "interval":600}');
+        break;
+      default:
+        break
+    }
+  }
+
+  function candlestick_graph() {
+    init_data();
+
+    return new Chart(ctx, {
+      type: 'candlestick',
+      data: {
+        datasets: [{
+          label: 'Price',
+          data: barData,
+          yAxisID: 'left-y-axis'
+        }, {
+          label: 'Volume',
+          type: 'scatter',
+          data: lineData,
+          borderColor: 'blue',
+          yAxisID: 'right-y-axis'
+        }]
+      },
+      options: {
+          scales: {
+              'left-y-axis': {
+                  type: 'linear',
+                  position: 'left'
+              },
+              'right-y-axis': {
+                  type: 'linear',
+                  position: 'right'
+              }
+          }
+      }
+    });
+  }
+
+  function init_data() {
+    lineData = [];
+    barData = [];
+
+    barData.push({
+      x: 0,
+      o: 0,
+      h: 0,
+      l: 0,
+      c: 0
+      });
+
+    lineData.push({x: 0, y: 0});
+  }
 </script>
