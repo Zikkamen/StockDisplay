@@ -63,6 +63,7 @@
   socket.addEventListener("message", (event) => {
     if(event.data == "End of update") {
       update_data = true;
+      chart.update();
       
       return;
     }
