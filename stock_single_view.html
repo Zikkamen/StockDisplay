@@ -51,6 +51,7 @@
   var lineData = [];
 
   var chart = new candlestick_graph();
+  let update_data = false;
 
   const socket = new WebSocket("ws://localhost:9002");
 
@@ -60,6 +61,12 @@
 
   // Listen for messages
   socket.addEventListener("message", (event) => {
+    if(event.data == "End of update") {
+      update_data = true;
+      
+      return;
+    }
+
     let parsed_data = JSON.parse(event.data);
 
     if(parsed_data.avg_price - parsed_data.min_price > 1) {
@@ -93,8 +100,10 @@
       barData.shift();
       lineData.shift();
     }
-    
-    chart.update();
+
+    if(update_data) {
+      chart.update();
+    }
   });
 
   let current_active = "one_sec";
@@ -114,6 +123,7 @@
 
     chart.destroy();
     chart = new candlestick_graph();
+    update_data = false;
 
     switch(current_active) {
       case "one_sec":
