@@ -11,12 +11,9 @@
     <script src="http://45.83.104.11:7878/files/static/js/chartjs-adapter-luxon.js"></script>
   </head>
   <body>
-    <a href="./" style="text-decoration: none; color: black;"><h1>StockDisplay</h1></a>
-
-    <h1 style="max-width: fit-content; margin-left: auto; margin-right: auto;">{{ stock_name }}</h1>
-    <div style="min-width: 1400px">
-      <div style="min-width: 1200px; margin-left: 100px; margin-right: 100px; margin-top: 100px;">
-        <h2>Realtime chart</h2>
+    <div style="min-width: 1220px">
+      <div style="min-width: 1200px; margin-left: 10px; margin-right: 10px; margin-top: 10px;">
+        <h3><a href="./" style="text-decoration: none; color: black;">Realtime chart {{ stock_name }}</a></h3>
         <div class="btn-group btn-group-toggle" data-toggle="buttons" style="float: right; margin-bottom: 20px;">
           <label class="btn btn-secondary active">
             <input type="radio" name="options" id="one_sec" autocomplete="off" onClick="time_interval_change(this.id)"> 1 Second
