@@ -56,6 +56,10 @@
     let parsed_data = JSON.parse(event.data);
     console.log(parsed_data);
 
+    if(parsed_data.name == "") {
+      return;
+    }
+
     let uppercase_name = parsed_data.name.toUpperCase();
 
     if(!stockrow_map.has(uppercase_name)) {
