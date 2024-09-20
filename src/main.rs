@@ -41,7 +41,10 @@ fn index(http_request: HttpConnectionDetails) -> String {
     }
 
     let tmpl = env.get_template("home").expect("Valid template");
-    let contents = tmpl.render(context!(stock_list => stock_list)).expect("Valid rendering template");
+    let contents = tmpl.render(context!(
+        stock_list => stock_list,
+        server_ip => SERVER_IP,
+    )).expect("Valid rendering template");
 
     write_respone_successful(contents)
 }
@@ -51,7 +54,6 @@ fn index_stock(http_request: HttpConnectionDetails) -> String {
     let mut env = Environment::new();
 
     env.add_template("stock", &html_file_content);
-    env.add_template("server_ip", SERVER_IP);
 
     let path = http_request.get_path();
 
@@ -61,7 +63,10 @@ fn index_stock(http_request: HttpConnectionDetails) -> String {
     };
 
     let tmpl = env.get_template("stock").expect("Valid template");
-    let contents = tmpl.render(context!(stock_name => stock_name)).expect("Valid rendering template");
+    let contents = tmpl.render(context!(
+        stock_name => stock_name,
+        server_ip => SERVER_IP,
+    )).expect("Valid rendering template");
 
     write_respone_successful(contents)
 }
