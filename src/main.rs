@@ -8,78 +8,89 @@ use std::{
 
 use minijinja::{Environment, context};
 
-mod web_api;
+use network_essentials::web_api::http_server::HttpServer;
+use network_essentials::web_api::api_register::ApiRegister;
+use network_essentials::web_api::api_register::HttpConnectionDetails;
 
-use crate::web_api::http_server::HttpServer;
-use crate::web_api::api_register::ApiRegister;
-use crate::web_api::api_register::get_method_and_path;
+static SERVER_IP:&'static str = "localhost";
 
 fn main() {
     let mut main_api = ApiRegister::new(index);
 
     let files_api = ApiRegister::new(return_file);
-    main_api.register_prefix("files", files_api);
+    main_api.register_prefix("/files", files_api);
 
     let stocks_api = ApiRegister::new(index_stock);
-    main_api.register_prefix("stocks", stocks_api);
+    main_api.register_prefix("/stocks", stocks_api);
 
-    let http_server = HttpServer::new("127.0.0.1:7878", main_api);
+    let http_server = HttpServer::new("127.0.0.1:7878", main_api, 16, 10_000);
     http_server.start_listening();
 }
 
-fn index(_http_request: HashMap<String, String>, stream: TcpStream) {
+fn index(http_request: HttpConnectionDetails) -> String {
     let html_file_content = fs::read_to_string("bootstrap.html").expect("Valid file");
     let mut env = Environment::new();
 
     env.add_template("home", &html_file_content);
+    env.add_template("server_ip", SERVER_IP);
 
     let mut stock_list:Vec<String> = Vec::new();
     
-    for i in 0..50 { stock_list.push(format!("Stock{}", i)); }
+    for i in 0..50 { 
+        stock_list.push(format!("Stock{}", i)); 
+    }
 
     let tmpl = env.get_template("home").expect("Valid template");
     let contents = tmpl.render(context!(stock_list => stock_list)).expect("Valid rendering template");
 
-    write_respone_successful(stream, contents);
+    write_respone_successful(contents)
 }
 
-fn index_stock(http_request: HashMap<String, String>, stream: TcpStream) {
+fn index_stock(http_request: HttpConnectionDetails) -> String {
     let html_file_content = fs::read_to_string("stock_single_view.html").expect("Valid file");
     let mut env = Environment::new();
 
     env.add_template("stock", &html_file_content);
+    env.add_template("server_ip", SERVER_IP);
 
-    let (method, path) = get_method_and_path(&http_request).expect("Method and Path got checked already");
+    let path = http_request.get_path();
+
     let stock_name:String = match path.split('/').next_back() {
         Some(v) => v.to_uppercase(),
-        None => return,
+        None => return write_respone_404(),
     };
 
     let tmpl = env.get_template("stock").expect("Valid template");
     let contents = tmpl.render(context!(stock_name => stock_name)).expect("Valid rendering template");
 
-    write_respone_successful(stream, contents);
+    write_respone_successful(contents)
 }
 
-fn return_file(http_request: HashMap<String, String>, stream: TcpStream) {
-    let (method, path) = get_method_and_path(&http_request).expect("Method and Path got checked already");
-
+fn return_file(http_request: HttpConnectionDetails) -> String {
+    let path = http_request.get_path();
     let file_path = ".".to_owned() + &path.clone();
+
     let file = fs::read_to_string(file_path.clone());
-    
-    if !file.is_ok() {
-        println!("File not found {}", file_path);
-        return;
+
+    match file {
+        Ok(v) => write_respone_successful(v),
+        Err(_) => {
+            println!("File not found {}", file_path);
+
+            write_respone_404()
+        },
     }
-
-    let file_contents = file.unwrap();
-
-    write_respone_successful(stream, file_contents);
 }
 
-fn write_respone_successful(mut stream: TcpStream, contents: String) {
+fn write_respone_successful(contents: String) -> String {
     let status_line = "HTTP/1.1 200 OK";
     let length = contents.len();
-    let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
-    stream.write_all(response.as_bytes()).unwrap();
+    
+    format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}")
+}
+
+fn write_respone_404() -> String {
+    let status_line = "HTTP/1.1 404";
+    
+    format!("{status_line}\r\n")
 }

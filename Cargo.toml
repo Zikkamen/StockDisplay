@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 minijinja = "2.1.1"
+network_essentials = {git = "https://github.com/Zikkamen/network_essentials.git" }

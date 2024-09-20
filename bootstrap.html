@@ -44,7 +44,7 @@
   let stockrow_map = new Map();
   let cur_id = 0;
 
-  const socket = new WebSocket("ws://localhost:9002");
+  const socket = new WebSocket("ws://{{ server_ip }}:9002");
 
   // Connection opened
   socket.addEventListener("open", (event) => {

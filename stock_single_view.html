@@ -50,7 +50,7 @@
   var chart = new candlestick_graph();
   let update_data = false;
 
-  const socket = new WebSocket("ws://localhost:9002");
+  const socket = new WebSocket("ws://{{ server_ip }}:9002");
 
   socket.addEventListener("open", (event) => {
     socket.send('{"stock": "{{ stock_name }}", "interval":1}');

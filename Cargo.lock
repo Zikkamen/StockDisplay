@@ -7,6 +7,7 @@ name = "StockMonitor"
 version = "0.1.0"
 dependencies = [
  "minijinja",
+ "network_essentials",
 ]
 
 [[package]]
@@ -17,6 +18,11 @@ checksum = "f4bf71af278c578cbcc91d0b1ff092910208bc86f7b3750364642bd424e3dcd3"
 dependencies = [
  "serde",
 ]
+
+[[package]]
+name = "network_essentials"
+version = "0.1.0"
+source = "git+https://github.com/Zikkamen/network_essentials.git#1446240deb30f7afe27a3ae0f78615582e76cdec"
 
 [[package]]
 name = "proc-macro2"
