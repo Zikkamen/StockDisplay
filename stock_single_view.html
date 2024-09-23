@@ -1,34 +1,35 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Stock Display</title>
-    <link href="http://45.83.104.11:7878/files/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="http://45.83.104.11:7878/files/static/js/chart.js"></script>
     <script src="http://45.83.104.11:7878/files/static/js/luxon.js"></script>
     <script src="http://45.83.104.11:7878/files/static/js/chartjs-chart-financial.js"></script>
     <script src="http://45.83.104.11:7878/files/static/js/chartjs-adapter-luxon.js"></script>
+    <script src="http://45.83.104.11:7878/files/static/js/chartjs-plugin-crosshair.min.js"></script>
   </head>
   <body>
     <div style="min-width: 1220px">
       <div style="min-width: 1200px; margin-left: 10px; margin-right: 10px; margin-top: 10px;">
-        <h3><a href="/" style="text-decoration: none; color: black;">Realtime chart {{ stock_name }}</a></h3>
+        <h3><a href="/" style="text-decoration: none;">Realtime chart {{ stock_name }}</a></h3>
         <div class="btn-group btn-group-toggle" data-toggle="buttons" style="float: right; margin-bottom: 20px;">
           <label class="btn btn-secondary active">
-            <input type="radio" name="options" id="one_sec" autocomplete="off" onClick="time_interval_change(this.id)"> 1 Second
+            <input style="display:none;" type="radio" name="options" id="one_sec" autocomplete="off" onClick="time_interval_change(this.id)"> 1 Second
           </label>
           <label class="btn btn-secondary">
-            <input type="radio" name="options" id="ten_sec" autocomplete="off" onClick="time_interval_change(this.id)"> 10 Seconds
+            <input style="display:none;" type="radio" name="options" id="ten_sec" autocomplete="off" onClick="time_interval_change(this.id)"> 10 Seconds
           </label>
           <label class="btn btn-secondary">
-            <input type="radio" name="options" id="one_min" autocomplete="off" onClick="time_interval_change(this.id)"> 1 Minute
+            <input style="display:none;" type="radio" name="options" id="one_min" autocomplete="off" onClick="time_interval_change(this.id)"> 1 Minute
           </label>
           <label class="btn btn-secondary">
-            <input type="radio" name="options" id="five_min" autocomplete="off" onClick="time_interval_change(this.id)"> 5 Minutes
+            <input style="display:none;" type="radio" name="options" id="five_min" autocomplete="off" onClick="time_interval_change(this.id)"> 5 Minutes
           </label>
           <label class="btn btn-secondary">
-            <input type="radio" name="options" id="ten_min" autocomplete="off" onClick="time_interval_change(this.id)"> 10 Minutes
+            <input style="display:none;" type="radio" name="options" id="ten_min" autocomplete="off" onClick="time_interval_change(this.id)"> 10 Minutes
           </label>
         </div>
         <canvas id="chart"></canvas>
@@ -153,24 +154,45 @@
         datasets: [{
           label: 'Price',
           data: barData,
-          yAxisID: 'left-y-axis'
+          borderColor: 'white',
+          yAxisID: 'left-y-axis',
+          xAxisID: 'x-axis'
         }, {
           label: 'Volume',
           type: 'scatter',
           data: lineData,
-          borderColor: 'blue',
-          yAxisID: 'right-y-axis'
+          borderColor: 'lightblue',
+          yAxisID: 'right-y-axis',
+          xAxisID: 'x-axis'
         }]
       },
       options: {
+          plugins: {
+            legend: {
+                labels: {
+                  color: "white"
+                }
+            }
+          },
           scales: {
               'left-y-axis': {
+                  ticks: {
+                    color: "white"
+                  },
                   type: 'linear',
                   position: 'left'
               },
               'right-y-axis': {
+                  ticks: {
+                    color: "white"
+                  },
                   type: 'linear',
                   position: 'right'
+              },
+              'x-axis': {
+                  ticks: {
+                    color: "white"
+                  }
               }
           }
       }
