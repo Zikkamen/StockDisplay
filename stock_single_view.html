@@ -16,71 +16,80 @@
         <h3 style="display:inline-block; "><a href="/" style="text-decoration: none;">Realtime chart {{ stock_name }}</a></h3>
         <div class="btn-group btn-group-toggle" data-toggle="buttons" style="position:absolute; right:10px;">
           <label class="btn btn-secondary active">
-            <input style="display:none;" type="radio" name="options" id="one_sec" autocomplete="off" onClick="time_interval_change(this.id)"> 1 Second
+            <input style="display:none;" type="radio" name="options" id="1" autocomplete="off" onClick="time_interval_change(this.id)"> 1 Second
           </label>
           <label class="btn btn-secondary">
-            <input style="display:none;" type="radio" name="options" id="ten_sec" autocomplete="off" onClick="time_interval_change(this.id)"> 10 Seconds
+            <input style="display:none;" type="radio" name="options" id="10" autocomplete="off" onClick="time_interval_change(this.id)"> 10 Seconds
           </label>
           <label class="btn btn-secondary">
-            <input style="display:none;" type="radio" name="options" id="one_min" autocomplete="off" onClick="time_interval_change(this.id)"> 1 Minute
+            <input style="display:none;" type="radio" name="options" id="60" autocomplete="off" onClick="time_interval_change(this.id)"> 1 Minute
           </label>
           <label class="btn btn-secondary">
-            <input style="display:none;" type="radio" name="options" id="five_min" autocomplete="off" onClick="time_interval_change(this.id)"> 5 Minutes
+            <input style="display:none;" type="radio" name="options" id="300" autocomplete="off" onClick="time_interval_change(this.id)"> 5 Minutes
           </label>
           <label class="btn btn-secondary">
-            <input style="display:none;" type="radio" name="options" id="ten_min" autocomplete="off" onClick="time_interval_change(this.id)"> 10 Minutes
+            <input style="display:none;" type="radio" name="options" id="600" autocomplete="off" onClick="time_interval_change(this.id)"> 10 Minutes
           </label>
         </div>
-        <canvas id="chart"></canvas>
+        <canvas id="chart_1"></canvas>
+        <canvas id="chart_10" style="display:none;"></canvas>
+        <canvas id="chart_60" style="display:none;"></canvas>
+        <canvas id="chart_300" style="display:none;"></canvas>
+        <canvas id="chart_600" style="display:none;"></canvas>
       </div>
     </div>
   </body>
 </html>
 <script>
-  var barCount = 60;
+  var barCount = 120;
   var initialDateStr = new Date().toUTCString();
 
-  var ctx = document.getElementById('chart').getContext('2d');
-  ctx.canvas.width = 800;
-  ctx.canvas.height = 250;
+  let interval_list = [1, 10, 60, 300, 600];
+  let ctx_map = new Map();
+  let cgraph_map = new Map();
+  let barData_map = new Map();
+  let lineData_map = new Map();
 
-  var barData = [];
-  var lineData = [];
+  for(i of interval_list) {
+    let ctx = document.getElementById('chart_' + i).getContext('2d');
+    ctx.canvas.width = 800;
+    ctx.canvas.height = 250;
 
-  var chart = new candlestick_graph();
+    ctx_map.set(i, ctx);
+
+    cgraph_map.set(i, new candlestick_graph(i));
+  }
+
   let update_data = false;
 
   const socket = new WebSocket("ws://{{ server_ip }}:9002");
 
   socket.addEventListener("open", (event) => {
-    socket.send('{"stock": "{{ stock_name }}", "interval":1}');
+    socket.send('{"stock": "{{ stock_name }}"}');
   });
 
   // Listen for messages
   socket.addEventListener("message", (event) => {
     if(event.data == "End of update") {
       update_data = true;
-      chart.update();
+
+      for(i of interval_list) {
+        cgraph_map.get(i).update();
+      }
       
       return;
     }
 
     let parsed_data = JSON.parse(event.data);
 
-    if(parsed_data.avg_price - parsed_data.min_price > 1) {
-      parsed_data.min_price = parsed_data.avg_price;
-    }
+    let lineData = lineData_map.get(parsed_data.stock_interval);
+    let barData = barData_map.get(parsed_data.stock_interval);
 
-    if(parsed_data.max_price - parsed_data.avg_price > 1) {
-      parsed_data.max_price = parsed_data.avg_price;
+    if(!cgraph_map.has(parsed_data.stock_interval)) {
+      cgraph_map.set(parsed_data.stock_interval, new candlestick_graph(parsed_data.stock_interval));
     }
 
     console.log(parsed_data);
-
-    if(lineData[0].x == 0) {
-      barData.shift();
-      lineData.shift();
-    }
 
     barData.push(
         {
@@ -94,72 +103,43 @@
 
     lineData.push({x: parsed_data.timestamp, y: parsed_data.volume_moved});
 
-    if(barData.length >= 120) {
+    if(barData.length > barCount) {
       barData.shift();
       lineData.shift();
     }
 
     if(update_data) {
-      chart.update();
+      cgraph_map.get(parsed_data.stock_interval).update();
     }
   });
 
-  let current_active = "one_sec";
+  let current_active = 1;
 
   function time_interval_change(button_id){
     document.getElementById(current_active).parentNode.className = "btn btn-secondary";
     document.getElementById(button_id).parentNode.className = "btn btn-secondary active";
+
+    document.getElementById("chart_" + current_active).style.display = "none";
+    document.getElementById("chart_" + button_id).style.display = "";
     current_active = button_id;
-
-    while(barData.length > 0) {
-      barData.pop();
-    }
-
-    while(lineData.length > 0) {
-      lineData.pop();
-    }
-
-    chart.destroy();
-    chart = new candlestick_graph();
-    update_data = false;
-
-    switch(current_active) {
-      case "one_sec":
-        socket.send('{"stock": "{{ stock_name }}", "interval":1}');
-        break;
-      case "ten_sec":
-        socket.send('{"stock": "{{ stock_name }}", "interval":10}');
-        break;
-      case "one_min":
-        socket.send('{"stock": "{{ stock_name }}", "interval":60}');
-        break;
-      case "five_min":
-        socket.send('{"stock": "{{ stock_name }}", "interval":300}');
-        break;
-      case "ten_min":
-        socket.send('{"stock": "{{ stock_name }}", "interval":600}');
-        break;
-      default:
-        break
-    }
   }
 
-  function candlestick_graph() {
-    init_data();
+  function candlestick_graph(interval) {
+    init_data(interval);
 
-    return new Chart(ctx, {
+    return new Chart(ctx_map.get(interval), {
       type: 'candlestick',
       data: {
         datasets: [{
           label: 'Price',
-          data: barData,
+          data: barData_map.get(interval),
           borderColor: 'white',
           yAxisID: 'left-y-axis',
           xAxisID: 'x-axis'
         }, {
           label: 'Volume',
           type: 'scatter',
-          data: lineData,
+          data: lineData_map.get(interval),
           borderColor: 'lightblue',
           yAxisID: 'right-y-axis',
           xAxisID: 'x-axis'
@@ -198,18 +178,11 @@
     });
   }
 
-  function init_data() {
+  function init_data(interval) {
     lineData = [];
     barData = [];
 
-    barData.push({
-      x: 0,
-      o: 0,
-      h: 0,
-      l: 0,
-      c: 0
-      });
-
-    lineData.push({x: 0, y: 0});
+    lineData_map.set(interval, lineData);
+    barData_map.set(interval, barData);
   }
 </script>
