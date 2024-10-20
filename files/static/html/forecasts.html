@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Stock Display</title>
+    <link href="http://45.83.104.11:7878/files/static/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <h1>StockDisplay</h1>
+    <table class="table">
+        <thead style="position: sticky;top: 0; background-color: white;">
+          <tr>
+            <th scope="col">Stock</th>
+            <th scope="col">Price</th>
+            <th scope="col">Price Prediction (1min)</th>
+            <th scope="col">Price Prediction (5min)</th>
+            <th scope="col">Price Prediction (15min)</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for stock in stock_list %}
+          <tr id={{ stock }} style="display:none">
+            <th scope="row">StockName</th>
+            <td>undefined</td>
+            <td>undefined</td>
+            <td>undefined</td>
+            <td>undefined</td>
+            <td>undefined</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+
+    <script src="http://45.83.104.11:7878/files/static/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

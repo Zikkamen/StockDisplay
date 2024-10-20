@@ -1,10 +1,4 @@
-use std::{
-    fs,
-    fs::File,
-    collections::{HashMap},
-    io::{prelude::*},
-    net::{TcpStream},
-};
+use std::fs;
 
 use minijinja::{Environment, context};
 
@@ -23,16 +17,19 @@ fn main() {
     let stocks_api = ApiRegister::new(index_stock);
     main_api.register_prefix("/stocks", stocks_api);
 
-    let http_server = HttpServer::new("127.0.0.1:7878", main_api, 16, 10_000);
+    let forecasts_api = ApiRegister::new(index_forecasts);
+    main_api.register_prefix("/forecasts", forecasts_api);
+
+    let http_server = HttpServer::new("127.0.0.1:7878", main_api, 16, 100);
     http_server.start_listening();
 }
 
-fn index(http_request: HttpConnectionDetails) -> String {
-    let html_file_content = fs::read_to_string("bootstrap.html").expect("Valid file");
+fn index(_http_request: HttpConnectionDetails) -> String {
+    let html_file_content = fs::read_to_string("./files/static/html/bootstrap.html").expect("Valid file");
     let mut env = Environment::new();
 
-    env.add_template("home", &html_file_content);
-    env.add_template("server_ip", SERVER_IP);
+    let _ = env.add_template("home", &html_file_content);
+    let _ = env.add_template("server_ip", SERVER_IP);
 
     let mut stock_list:Vec<String> = Vec::new();
     
@@ -49,11 +46,33 @@ fn index(http_request: HttpConnectionDetails) -> String {
     write_respone_successful(contents)
 }
 
-fn index_stock(http_request: HttpConnectionDetails) -> String {
-    let html_file_content = fs::read_to_string("stock_single_view.html").expect("Valid file");
+fn index_forecasts(_http_request: HttpConnectionDetails) -> String {
+    let html_file_content = fs::read_to_string("./files/static/html/forecasts.html").expect("Valid file");
     let mut env = Environment::new();
 
-    env.add_template("stock", &html_file_content);
+    let _ = env.add_template("home", &html_file_content);
+    let _ = env.add_template("server_ip", SERVER_IP);
+
+    let mut stock_list:Vec<String> = vec!["Stock_1".to_owned(), "Stock2".to_owned()];
+    
+    for i in 0..50 { 
+        stock_list.push(format!("Stock{}", i)); 
+    }
+
+    let tmpl = env.get_template("home").expect("Valid template");
+    let contents = tmpl.render(context!(
+        stock_list => stock_list,
+        server_ip => SERVER_IP,
+    )).expect("Valid rendering template");
+
+    write_respone_successful(contents)
+}
+
+fn index_stock(http_request: HttpConnectionDetails) -> String {
+    let html_file_content = fs::read_to_string("./files/static/html/stock_single_view.html").expect("Valid file");
+    let mut env = Environment::new();
+
+    let _ = env.add_template("stock", &html_file_content);
 
     let path = http_request.get_path();
 
